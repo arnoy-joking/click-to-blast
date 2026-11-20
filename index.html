@@ -58,8 +58,19 @@ button:hover{border-color:var(--accent);background:#253747}
 button:focus-visible,input:focus-visible,.item input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 input[type=search]{flex:1 1 260px;min-width:190px;background:var(--panel);color:var(--text);border:1px solid var(--line);padding:9px 14px}
 input[type=search]::placeholder{color:#8292a5}
-#subjects{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start}
-.subject{min-width:0;margin:0;background:linear-gradient(145deg,#18222e,#131a23);border:1px solid var(--line);border-radius:15px;overflow:hidden;box-shadow:0 8px 26px #00000018}
+
+/* ===== Subject filter chips ===== */
+.chips{display:flex;gap:8px;margin-top:13px;overflow-x:auto;padding:2px 2px 6px;scrollbar-width:thin;scrollbar-color:#2f4256 transparent;-webkit-overflow-scrolling:touch}
+.chips::-webkit-scrollbar{height:6px}
+.chips::-webkit-scrollbar-thumb{background:#2f4256;border-radius:99px}
+.chip{flex:none;min-height:38px;border-radius:99px;padding:5px 14px;font-size:.92rem;white-space:nowrap;display:inline-flex;align-items:center;gap:8px}
+.chip small{font-size:.76rem;color:var(--muted);font-weight:600}
+.chip[aria-pressed=true]{background:#163b3b;border-color:var(--accent);color:var(--accent)}
+.chip[aria-pressed=true] small{color:var(--accent)}
+
+/* ===== Masonry-style columns: no more empty gaps next to short cards ===== */
+#subjects{column-count:2;column-gap:18px}
+.subject{display:inline-block;width:100%;break-inside:avoid;-webkit-column-break-inside:avoid;page-break-inside:avoid;margin:0 0 18px;min-width:0;background:linear-gradient(145deg,#18222e,#131a23);border:1px solid var(--line);border-radius:15px;overflow:hidden;box-shadow:0 8px 26px #00000018}
 .subject h2{font-size:1.08rem;line-height:1.4;margin:0;padding:15px 17px;background:linear-gradient(100deg,#1e3040,#1a2633);display:flex;align-items:center;justify-content:space-between;gap:12px}
 .subject h2 small{font-size:.8rem;color:var(--accent);font-weight:650;white-space:nowrap;background:#163b3b;padding:3px 9px;border-radius:99px}
 ul{list-style:none;padding:7px 17px 12px;margin:0}
@@ -69,44 +80,77 @@ ul{list-style:none;padding:7px 17px 12px;margin:0}
 .item label{cursor:pointer;flex:1;overflow-wrap:anywhere}
 .item.done label{color:#8393a5;text-decoration:line-through;text-decoration-thickness:1px}
 .empty{display:none;color:var(--muted);text-align:center;padding:38px}
-@media(min-width:1500px){#subjects{grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}}
-@media(max-width:760px){main{padding:25px 18px 48px}#subjects{grid-template-columns:1fr;gap:13px}.toolbar{padding-top:11px}}
-@media(max-width:480px){main{padding:20px 13px 40px}h1{font-size:1.55rem}.sub{font-size:.9rem;margin-bottom:16px}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}input[type=search]{grid-column:1/-1;min-width:0;width:100%}button{padding:8px 9px;font-size:.9rem}.subject{border-radius:12px}.subject h2{font-size:1rem;padding:13px 14px}ul{padding:5px 14px 9px}.item{gap:10px;padding:9px 0}.item label{font-size:.95rem}.stats{font-size:.85rem}}
+@media(min-width:1500px){#subjects{column-gap:22px}.subject{margin-bottom:22px}}
+@media(max-width:760px){main{padding:25px 18px 48px}#subjects{column-count:1}.subject{margin-bottom:13px}.toolbar{padding-top:11px}}
+@media(max-width:480px){main{padding:20px 13px 40px}h1{font-size:1.55rem}.sub{font-size:.9rem;margin-bottom:16px}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}input[type=search]{grid-column:1/-1;min-width:0;width:100%}button{padding:8px 9px;font-size:.9rem}.chip{padding:4px 12px;font-size:.88rem}.subject{border-radius:12px}.subject h2{font-size:1rem;padding:13px 14px}ul{padding:5px 14px 9px}.item{gap:10px;padding:9px 0}.item label{font-size:.95rem}.stats{font-size:.85rem}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{transition:none!important}}
 </style>
 </head>
 <body>
 <main>
 <h1>HSC Syllabus Checklist</h1>
-<p class="sub">অধ্যায় শেষ হলে টিক দাও। অগ্রগতি এই ব্রাউজারেই সংরক্ষিত থাকবে।</p>
+<p class="sub">অধ্যায় শেষ হলে টিক দাও। অগ্রগতি এই ব্রাউজারেই সংরক্ষিত থাকবে।</p>
 <div class="toolbar">
  <div class="stats"><span id="progressText">0 / 0 সম্পন্ন</span><span id="percent">0%</span></div>
  <div class="track"><div class="fill" id="progressBar"></div></div>
  <div class="actions">
-  <input id="search" type="search" placeholder="অধ্যায় খুঁজুন…" aria-label="অধ্যায় খুঁজুন">
-  <button id="showAll">সব দেখাও</button><button id="showPending">বাকি অধ্যায়</button>
+  <input id="search" type="search" placeholder="অধ্যায় খুঁজুন…" aria-label="অধ্যায় খুঁজুন">
+  <button id="showAll">সব দেখাও</button><button id="showPending">বাকি অধ্যায়</button>
   <button id="reset">রিসেট</button>
  </div>
+ <div class="chips" id="chips" role="group" aria-label="বিষয় ফিল্টার"></div>
 </div>
 <div id="subjects"></div>
-<div class="empty" id="empty">কোনো অধ্যায় পাওয়া যায়নি।</div>
+<div class="empty" id="empty">কোনো অধ্যায় পাওয়া যায়নি।</div>
 </main>
 <script>
 const syllabus = [
-["রসায়ন প্রথম পত্র",["ল্যাবরেটরীর নিরাপদ ব্যবহার","গুণগত রসায়ন","মৌলের পর্যায়বৃত্ত ধর্ম ও রাসায়নিক বন্ধন","রাসায়নিক পরিবর্তন","কর্মমুখী রসায়ন"]],
-["রসায়ন দ্বিতীয় পত্র",["পরিবেশ রসায়ন","জৈব রসায়ন","পরিমাণগত রসায়ন","তড়িৎ রসায়ন","অর্থনৈতিক রসায়ন"]],
-["উচ্চতর গণিত প্রথম পত্র",["ম্যাট্রিক্স ও নির্ণায়ক","ভেক্টর","সরলরেখা","বৃত্ত","বিন্যাস ও সমাবেশ","ত্রিকোণমিতিক অনুপাত","সংযুক্ত কোণের ত্রিকোণমিতিক অনুপাত","ফাংশন ও ফাংশনের লেখচিত্র","অন্তরীকরণ","যোগজীকরণ"]],
-["উচ্চতর গণিত দ্বিতীয় পত্র",["বাস্তব সংখ্যা ও অসমতা","যোগাশ্রয়ী প্রোগ্রাম","জটিল সংখ্যা","বহুপদী ও বহুপদী সমীকরণ","দ্বিপদী বিস্তৃতি","কনিক","বিপরীত ত্রিকোণমিতিক ফাংশন ও ত্রিকোণমিতিক সমীকরণ","স্থিতিবিদ্যা","সমতলে বস্তুকণার গতি","বিস্তার পরিমাপ ও সম্ভাবনা"]],
-["পদার্থবিজ্ঞান প্রথম পত্র",["ভৌতজগৎ ও পরিমাপ","ভেক্টর","নিউটনীয়ান বলবিদ্যা","কাজ, শক্তি ও ক্ষমতা","মহাকর্ষ ও অভিকর্ষ","পদার্থের গাঠনিক ধর্ম","পর্যায়বৃত্ত গতি","তরঙ্গ","আদর্শ গ্যাস ও গ্যাসের গতিতত্ত্ব"]],
-["পদার্থবিজ্ঞান দ্বিতীয় পত্র",["তাপগতিবিদ্যা","স্থির তড়িৎ","চল তড়িৎ","তড়িৎ প্রবাহের চৌম্বক ক্রিয়া ও চুম্বকত্ব","তাড়িতচৌম্বকীয় আবেশ ও পরিবর্তী প্রবাহ","জ্যামিতিক আলোকবিজ্ঞান","ভৌত আলোকবিজ্ঞান","আধুনিক পদার্থবিজ্ঞানের সূচনা","পরমাণু মডেল এবং নিউক্লিয়ার পদার্থবিজ্ঞান","সেমিকন্ডাক্টর ও ইলেক্ট্রনিক্স","জ্যোতির্বিজ্ঞান"]],
-["জীববিজ্ঞান প্রথম পত্র",["কোষ ও এর গঠন","কোষ বিভাজন","কোষ রসায়ন","অণুজীব","শৈবাল ও ছত্রাক","ব্রায়োফাইটা ও টেরিডোফাইটা","নগ্নবীজী ও আবৃতবীজী উদ্ভিদ","টিস্যু ও টিস্যুতন্ত্র","উদ্ভিদ শারীরতত্ত্ব","উদ্ভিদের প্রজনন","জীবপ্রযুক্তি","জীবের পরিবেশ, বিস্তার ও সংরক্ষণ"]],
-["জীববিজ্ঞান দ্বিতীয় পত্র",["প্রাণীর বিভিন্নতা ও শ্রেণিবিন্যাস","প্রাণীর পরিচিতি","মানব শারীরতত্ত্ব: পরিপাক ও শোষণ","মানব শারীরতত্ত্ব: রক্ত ও সংবহন","মানব শারীরতত্ত্ব: শ্বসন ও শ্বাসক্রিয়া","মানব শারীরতত্ত্ব: বর্জ্য ও নিষ্কাশন","মানব শারীরতত্ত্ব: চলন ও অঙ্গচালনা","মানব শারীরতত্ত্ব: সমন্বয় ও নিয়ন্ত্রণ","মানব জীবনের ধারাবাহিকতা","মানবদেহের প্রতিরক্ষা (ইমিউনিটি)","জিনতত্ত্ব ও বিবর্তন","প্রাণীর আচরণ"]]
+["রসায়ন প্রথম পত্র",["ল্যাবরেটরীর নিরাপদ ব্যবহার","গুণগত রসায়ন","মৌলের পর্যায়বৃত্ত ধর্ম ও রাসায়নিক বন্ধন","রাসায়নিক পরিবর্তন","কর্মমুখী রসায়ন"]],
+["রসায়ন দ্বিতীয় পত্র",["পরিবেশ রসায়ন","জৈব রসায়ন","পরিমাণগত রসায়ন","তড়িৎ রসায়ন","অর্থনৈতিক রসায়ন"]],
+["উচ্চতর গণিত প্রথম পত্র",["ম্যাট্রিক্স ও নির্ণায়ক","ভেক্টর","সরলরেখা","বৃত্ত","বিন্যাস ও সমাবেশ","ত্রিকোণমিতিক অনুপাত","সংযুক্ত কোণের ত্রিকোণমিতিক অনুপাত","ফাংশন ও ফাংশনের লেখচিত্র","অন্তরীকরণ","যোগজীকরণ"]],
+["উচ্চতর গণিত দ্বিতীয় পত্র",["বাস্তব সংখ্যা ও অসমতা","যোগাশ্রয়ী প্রোগ্রাম","জটিল সংখ্যা","বহুপদী ও বহুপদী সমীকরণ","দ্বিপদী বিস্তৃতি","কনিক","বিপরীত ত্রিকোণমিতিক ফাংশন ও ত্রিকোণমিতিক সমীকরণ","স্থিতিবিদ্যা","সমতলে বস্তুকণার গতি","বিস্তার পরিমাপ ও সম্ভাবনা"]],
+["পদার্থবিজ্ঞান প্রথম পত্র",["ভৌতজগৎ ও পরিমাপ","ভেক্টর","নিউটনীয়ান বলবিদ্যা","কাজ, শক্তি ও ক্ষমতা","মহাকর্ষ ও অভিকর্ষ","পদার্থের গাঠনিক ধর্ম","পর্যায়বৃত্ত গতি","তরঙ্গ","আদর্শ গ্যাস ও গ্যাসের গতিতত্ত্ব"]],
+["পদার্থবিজ্ঞান দ্বিতীয় পত্র",["তাপগতিবিদ্যা","স্থির তড়িৎ","চল তড়িৎ","তড়িৎ প্রবাহের চৌম্বক ক্রিয়া ও চুম্বকত্ব","তাড়িতচৌম্বকীয় আবেশ ও পরিবর্তী প্রবাহ","জ্যামিতিক আলোকবিজ্ঞান","ভৌত আলোকবিজ্ঞান","আধুনিক পদার্থবিজ্ঞানের সূচনা","পরমাণু মডেল এবং নিউক্লিয়ার পদার্থবিজ্ঞান","সেমিকন্ডাক্টর ও ইলেক্ট্রনিক্স","জ্যোতির্বিজ্ঞান"]],
+["জীববিজ্ঞান প্রথম পত্র",["কোষ ও এর গঠন","কোষ বিভাজন","কোষ রসায়ন","অণুজীব","শৈবাল ও ছত্রাক","ব্রায়োফাইটা ও টেরিডোফাইটা","নগ্নবীজী ও আবৃতবীজী উদ্ভিদ","টিস্যু ও টিস্যুতন্ত্র","উদ্ভিদ শারীরতত্ত্ব","উদ্ভিদের প্রজনন","জীবপ্রযুক্তি","জীবের পরিবেশ, বিস্তার ও সংরক্ষণ"]],
+["জীববিজ্ঞান দ্বিতীয় পত্র",["প্রাণীর বিভিন্নতা ও শ্রেণিবিন্যাস","প্রাণীর পরিচিতি","মানব শারীরতত্ত্ব: পরিপাক ও শোষণ","মানব শারীরতত্ত্ব: রক্ত ও সংবহন","মানব শারীরতত্ত্ব: শ্বসন ও শ্বাসক্রিয়া","মানব শারীরতত্ত্ব: বর্জ্য ও নিষ্কাশন","মানব শারীরতত্ত্ব: চলন ও অঙ্গচালনা","মানব শারীরতত্ত্ব: সমন্বয় ও নিয়ন্ত্রণ","মানব জীবনের ধারাবাহিকতা","মানবদেহের প্রতিরক্ষা (ইমিউনিটি)","জিনতত্ত্ব ও বিবর্তন","প্রাণীর আচরণ"]]
 ];
-const KEY="hsc-syllabus-checklist-v1";
+const KEY="hsc-syllabus-checklist-v1", FKEY="hsc-syllabus-filter-v1";
 let checked={}; try{checked=JSON.parse(localStorage.getItem(KEY)||"{}")||{};}catch(e){checked={};}
-const root=document.getElementById("subjects"), search=document.getElementById("search");
+
+// Subject groups (e.g. "রসায়ন" covers both papers)
+const groupOf=name=>name.replace(/\s*(প্রথম|দ্বিতীয়)\s*পত্র$/,"");
+const groups=[...new Set(syllabus.map(s=>groupOf(s[0])))];
+let activeGroup="all";
+try{const g=localStorage.getItem(FKEY); if(g&&(g==="all"||groups.includes(g)))activeGroup=g;}catch(e){}
+
+const root=document.getElementById("subjects"), search=document.getElementById("search"), chipsEl=document.getElementById("chips");
 let pendingOnly=false;
-function save(){localStorage.setItem(KEY,JSON.stringify(checked));}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(checked));}catch(e){}}
+
+function renderChips(){
+ chipsEl.innerHTML="";
+ const make=(value,label,done,total)=>{
+  const b=document.createElement("button");b.type="button";b.className="chip";
+  b.setAttribute("aria-pressed",String(activeGroup===value));
+  b.append(label);
+  const s=document.createElement("small");s.textContent=`${done}/${total}`;b.append(s);
+  b.addEventListener("click",()=>{
+   activeGroup=value;
+   try{localStorage.setItem(FKEY,value);}catch(e){}
+   render();
+  });
+  chipsEl.append(b);
+ };
+ let allDone=0,allTotal=0;
+ const per=groups.map(g=>{
+  let done=0,total=0;
+  syllabus.forEach(([name,chs],si)=>{if(groupOf(name)!==g)return;chs.forEach((_,ci)=>{total++;if(checked[`${si}-${ci}`])done++;});});
+  allDone+=done;allTotal+=total;return [g,done,total];
+ });
+ make("all","সব বিষয়",allDone,allTotal);
+ per.forEach(([g,d,t])=>make(g,g,d,t));
+}
+
 function updateProgress(){
  const total=syllabus.reduce((n,s)=>n+s[1].length,0), done=Object.values(checked).filter(Boolean).length, pct=Math.round(done/total*100);
  document.getElementById("progressText").textContent=`${done} / ${total} সম্পন্ন`;
@@ -116,6 +160,7 @@ function updateProgress(){
 function render(){
  root.innerHTML=""; const q=search.value.trim().toLocaleLowerCase("bn"); let visible=0;
  syllabus.forEach(([subject,chapters],si)=>{
+  if(activeGroup!=="all"&&groupOf(subject)!==activeGroup)return;
   const items=chapters.map((chapter,ci)=>({chapter,id:`${si}-${ci}`})).filter(x=>(!pendingOnly||!checked[x.id])&&(!q||x.chapter.toLocaleLowerCase("bn").includes(q)));
   if(!items.length)return; visible+=items.length;
   const section=document.createElement("section");section.className="subject";
@@ -124,7 +169,7 @@ function render(){
   const ul=document.createElement("ul");
   items.forEach(({chapter,id})=>{
    const li=document.createElement("li");li.className="item"+(checked[id]?" done":"");
-   const cb=document.createElement("input");cb.type="checkbox";cb.id="ch-"+id;cb.checked=!!checked[id];cb.addEventListener("change",()=>{checked[id]=cb.checked;save();render();updateProgress();});
+   const cb=document.createElement("input");cb.type="checkbox";cb.id="ch-"+id;cb.checked=!!checked[id];cb.addEventListener("change",()=>{checked[id]=cb.checked;save();render();});
    const label=document.createElement("label");label.htmlFor=cb.id;label.textContent=chapter;
    li.append(cb,label);ul.append(li);
   });
@@ -132,6 +177,7 @@ function render(){
  });
  document.getElementById("empty").style.display=visible?"none":"block";
  updateProgress();
+ renderChips();
 }
 search.addEventListener("input",render);
 document.getElementById("showAll").onclick=()=>{pendingOnly=false;render();};
